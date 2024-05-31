@@ -13,6 +13,11 @@ pip install -r requirements.txt
 ```
 4. To start the application, run app.py file and open website.
 
+## Features
+- Gives general feedback
+- Gives grammatical feedback
+- Gives vocabulary feedback 
+- Writes sample essay
 
 
 
