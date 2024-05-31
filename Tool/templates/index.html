@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Essay Checker</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background: #ffffff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 600px;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        label {
+            margin-top: 10px;
+            font-weight: bold;
+            display: block;
+            color: #555;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .radio-group {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .radio-group input[type="radio"] {
+            display: none;
+        }
+        .radio-group label {
+            padding: 10px 20px;
+            border: 1px solid #ddd;
+            margin: 0;
+            cursor: pointer;
+            background-color: #fff;
+            color: #333;
+        }
+        .radio-group input[type="radio"]:checked + label {
+            background-color: #004080;
+            color: #fff;
+            border-color: #004080;
+        }
+        .radio-group label:first-child {
+            border-top-left-radius: 4px;
+            border-bottom-left-radius: 4px;
+        }
+        .radio-group label:last-child {
+            border-top-right-radius: 4px;
+            border-bottom-right-radius: 4px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #response {
+            margin-top: 20px;
+            white-space: pre-wrap;
+            background: #f1f1f1;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            display: none;
+            max-height: 200px;
+            overflow-y: scroll;
+        }
+        #progressBar {
+            display: none;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .progress {
+            width: 100%;
+            height: 20px;
+            background-color: #f3f3f3;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0;
+            background-color: #007bff;
+            text-align: center;
+            color: white;
+            line-height: 20px;
+            transition: width 0.2s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Essay Checker</h1>
+        <form id="textForm">
+            <label for="topic">Type or paste the topic of your writing:</label>
+            <input type="text" id="topic" name="topic" required>
+            
+            <label>Select type of text:</label>
+            <div class="radio-group">
+                <input type="radio" id="feedback" name="type" value="feedback" checked>
+                <label for="feedback">Feedback</label>
+                <input type="radio" id="grammar" name="type" value="grammar">
+                <label for="grammar">Grammar</label>
+                <input type="radio" id="vocabulary" name="type" value="vocabulary">
+                <label for="vocabulary">Vocabulary</label>
+                <input type="radio" id="sample" name="type" value="sample">
+                <label for="sample">Sample</label>
+            </div>
+
+            <label for="text">Type or paste your essay, letter or academic writing:</label>
+            <textarea id="text" name="text" rows="10" cols="50" required></textarea>
+
+            <button type="submit">Submit</button>
+            <div id="progressBar" class="progress">
+                <div id="progress" class="progress-bar">0%</div>
+            </div>
+        </form>
+        <div id="response"></div>
+    </div>
+
+    <script>
+        document.getElementById('textForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            var formData = new FormData(document.getElementById('textForm'));
+            var progressBar = document.getElementById('progressBar');
+            var progress = document.getElementById('progress');
+            var responseDiv = document.getElementById('response');
+            
+            progressBar.style.display = 'block';
+            progress.style.width = '0%';
+            progress.innerText = '0%';
+            responseDiv.style.display = 'none'; // Hide previous response
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/process', true);
+            xhr.setRequestHeader('Accept', 'text/event-stream');
+
+            xhr.onprogress = function() {
+                var lastEventIndex = xhr.responseText.lastIndexOf("data: ");
+                if (lastEventIndex !== -1) {
+                    var event = xhr.responseText.substring(lastEventIndex + 6).trim();
+                    var result = JSON.parse(event);
+                    if (result.progress !== undefined) {
+                        var width = result.progress;
+                        progress.style.width = width + '%';
+                        progress.innerText = width + '%';
+                    }
+                    if (result.response !== undefined) {
+                        responseDiv.style.display = 'block';
+                        responseDiv.innerText = result.response;
+                    }
+                    if (result.error !== undefined) {
+                        responseDiv.style.display = 'block';
+                        responseDiv.innerText = 'Error: ' + result.error;
+                    }
+                }
+            };
+
+            xhr.onload = function() {
+                progressBar.style.display = 'none';
+                progress.style.width = '0%';
+                progress.innerText = '0%';
+            };
+
+            xhr.onerror = function() {
+                responseDiv.style.display = 'block';
+                responseDiv.innerText = 'Error receiving progress updates.';
+                progressBar.style.display = 'none';
+                progress.style.width = '0%';
+                progress.innerText = '0%';
+            };
+
+            xhr.send(formData);
+        });
+    </script>
+</body>
+</html>
