@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Essay Checker</title>
+    <!-- CSS SETUP -->
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -123,9 +124,10 @@
     <div class="container">
         <h1>Essay Checker</h1>
         <form id="textForm">
+            <!-- TOPIC FORM -->
             <label for="topic">Type or paste the topic of your writing:</label>
             <input type="text" id="topic" name="topic" required>
-            
+            <!-- Button selection -->
             <label>Select type of text:</label>
             <div class="radio-group">
                 <input type="radio" id="feedback" name="type" value="feedback" checked>
@@ -137,7 +139,7 @@
                 <input type="radio" id="sample" name="type" value="sample">
                 <label for="sample">Sample</label>
             </div>
-
+            <!-- ESSAY SPACE -->
             <label for="text">Type or paste your essay, letter or academic writing:</label>
             <textarea id="text" name="text" rows="10" cols="50" required></textarea>
 
@@ -150,6 +152,7 @@
     </div>
 
     <script>
+        // SUBMIT FEEBACK
         document.getElementById('textForm').addEventListener('submit', function(event) {
             event.preventDefault();
             var formData = new FormData(document.getElementById('textForm'));
@@ -161,11 +164,11 @@
             progress.style.width = '0%';
             progress.innerText = '0%';
             responseDiv.style.display = 'none'; // Hide previous response
-
+            // process request
             var xhr = new XMLHttpRequest();
             xhr.open('POST', '/process', true);
             xhr.setRequestHeader('Accept', 'text/event-stream');
-
+            
             xhr.onprogress = function() {
                 var lastEventIndex = xhr.responseText.lastIndexOf("data: ");
                 if (lastEventIndex !== -1) {
